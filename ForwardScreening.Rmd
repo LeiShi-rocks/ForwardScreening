@@ -1,0 +1,178 @@
+---
+title: "Factorial_Exp"
+author: "Lei Shi"
+date: "2022-10-11"
+output: html_document
+---
+
+
+```{r message=FALSE}
+# Input everything
+library("dplyr")
+options(dplyr.summarise.inform = FALSE)
+
+library("ggplot2")
+library("tidyverse")
+if(!require("AlgDesign")){
+  install.packages("AlgDesign")
+}
+library("AlgDesign")
+if(!require("coop")){
+  install.packages("coop")
+}
+library("coop")
+library("car")
+library("glmnet")
+
+if (!require('Rcpp', quietly = TRUE)) { install.packages('Rcpp') } 
+library('Rcpp') # Load package 'Rcpp'
+ 
+if (!require('RcppArmadillo', quietly = TRUE)) { install.packages('RcppArmadillo') } 
+library('RcppArmadillo') # Load package 'RcppArmadillo'
+
+
+source("auxillary_functions.R")
+```
+
+
+## Generate a 2^3 design
+
+```{r}
+K  = 3
+design.core = factor.design(K, trt_group_size = rep(1,2^K), interaction = 3, centering = 1/2)
+design.core = data.frame(Intercept = rep(1, 2^K), 
+                         design.core)
+design.core
+```
+
+## only tau_A is selected
+
+```{r}
+# only tau_A is selected
+Mhat = c(2)
+GGT = as.matrix(design.core[,Mhat]) %*% t(as.matrix(design.core[,Mhat])) / 2^K
+f = c(1, rep(0, 7))
+fstar = GGT %*% f
+
+paste0("GM*GM^T is given by:")
+GGT
+
+paste0("f is given by:")
+f
+
+paste0("GM*GM^T*f is given by:")
+fstar
+
+paste0("max|f|/|f|_2 is:")
+max(abs(f))/sqrt(sum(f^2))
+
+paste0("max|fstar|/|fstar|_2 is:")
+max(abs(fstar))/sqrt(sum(fstar^2))
+```
+
+## only intercept and tau_A are selected
+
+```{r}
+# only intercept and tau_A are selected
+Mhat = c(1:2)
+GGT = as.matrix(design.core[,Mhat]) %*% t(as.matrix(design.core[,Mhat])) / 2^K
+
+f = c(1, rep(0, 7))
+fstar = GGT %*% f
+
+paste0("GM*GM^T is given by:")
+GGT
+
+paste0("f is given by:")
+f
+
+paste0("GM*GM^T*f is given by:")
+fstar
+
+paste0("max|f|/|f|_2 is:")
+max(abs(f))/sqrt(sum(f^2))
+
+paste0("max|fstar|/|fstar|_2 is:")
+max(abs(fstar))/sqrt(sum(fstar^2))
+```
+
+## only intercept and main effects are selected
+
+```{r}
+# only intercept and main effects are selected
+Mhat = c(1:4)
+GGT = as.matrix(design.core[,Mhat]) %*% t(as.matrix(design.core[,Mhat])) / 2^K
+
+f = c(1, rep(0, 7))
+fstar = GGT %*% f
+
+paste0("GM*GM^T is given by:")
+GGT
+
+paste0("f is given by:")
+f
+
+paste0("GM*GM^T*f is given by:")
+fstar
+
+paste0("max|f|/|f|_2 is:")
+max(abs(f))/sqrt(sum(f^2))
+
+paste0("max|fstar|/|fstar|_2 is:")
+max(abs(fstar))/sqrt(sum(fstar^2))
+```
+
+## only intercept, main effects and tau_AB are selected
+
+```{r}
+# only intercept, main effects and tau_AB are selected
+Mhat = c(1:5)
+GGT = as.matrix(design.core[,Mhat]) %*% t(as.matrix(design.core[,Mhat])) / 2^K
+
+f = c(1, rep(0, 7))
+fstar = GGT %*% f
+
+paste0("GM*GM^T is given by:")
+GGT
+
+paste0("f is given by:")
+f
+
+paste0("GM*GM^T*f is given by:")
+fstar
+
+paste0("max|f|/|f|_2 is:")
+max(abs(f))/sqrt(sum(f^2))
+
+paste0("max|fstar|/|fstar|_2 is:")
+max(abs(fstar))/sqrt(sum(fstar^2))
+```
+
+## only intercept, main effects and second order interactions are selected
+
+```{r}
+# only intercept, main effects and second order interactions are selected
+Mhat = c(1:7)
+GGT = as.matrix(design.core[,Mhat]) %*% t(as.matrix(design.core[,Mhat])) / 2^K
+
+f = c(1, rep(0, 7))
+
+fstar = GGT %*% f
+
+paste0("GM*GM^T is given by:")
+GGT
+
+paste0("f is given by:")
+f
+
+paste0("GM*GM^T*f is given by:")
+fstar
+
+paste0("max|f|/|f|_2 is:")
+max(abs(f))/sqrt(sum(f^2))
+
+paste0("max|fstar|/|fstar|_2 is:")
+max(abs(fstar))/sqrt(sum(fstar^2))
+```
+
+Still a dense fstar but the ratio $\|f\|_\infty / \|f\|_2 $ is close to one.

@@ -1,0 +1,169 @@
+---
+title: "Simulation"
+author: "Lei Shi"
+date: "2022-11-23"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+library("dplyr")
+options(dplyr.summarise.inform = FALSE)
+
+library("ggplot2")
+library("tidyverse")
+if(!require("AlgDesign")){
+  install.packages("AlgDesign")
+  library("AlgDesign")
+}
+library("car")
+library("glmnet")
+source("auxillary_functions.R")
+```
+
+
+
+1. Determine the factorial effect sizes.
+```{r}
+# basic parameter setup
+K = 8
+num_trt_group = 2^K
+trt_group_size = rep(2, 2^K)
+num_pop = sum(trt_group_size)
+level = K
+
+
+design.core <- factor.design(K, trt_group_size = rep(1,2^K), interaction = level, centering = 1/2)
+data.ind <- factor.design(K, trt_group_size = trt_group_size, 1)
+design.run <- factor.design(K, trt_group_size = trt_group_size, interaction = level, centering = 1/2)
+
+# seed 
+set.seed(2022)
+tau = rep(0, sum(choose(K,0:level)))
+tau[1] = runif(choose(K,0), 0.044*5, 10*0.044) * sign(runif(choose(K,0),-1, 1))
+tau[(sum(choose(K,0:0))+1):sum(choose(K,0:1))] = 0.50 * sign(runif(choose(K,1),-1, 1))
+tau[(sum(choose(K,0:1))+1):sum(choose(K,0:2))] = 0.25 * sign(runif(choose(K,2),-1, 1))
+  #runif(choose(K,2), 0.044*4, 5*0.044) * sign(runif(choose(K,2),-1, 1)) * rbinom(choose(K,2), 1, 0.7)
+
+#tau <- c(
+#  runif(choose(K,0), 0.044*5, 10*0.044) * sign(runif(choose(K,0),-1, 1)),
+#  runif(choose(K,1), 0.044*5, 10*0.044) * sign(runif(choose(K,1),-1, 1)),
+#  runif(choose(K,2), 0.044*1, 5*0.044) * sign(runif(choose(K,2),-1, 1)) * rbinom(choose(K,2), 1, 0.7),
+#)
+
+
+# effects
+names(tau) <- c("(Intecept)", names(design.core))
+
+# non-zeros
+nonzero.effect <- paste0("F", 1:5)
+nonzero.effect <- c(nonzero.effect, 
+                    heredity.proceed.new(K, nonzero.effect, 1,
+                                         "strong")$working_model)
+zero.effect <- setdiff(names(tau), nonzero.effect)
+tau[zero.effect] <- 0
+nonzero.effect = names(tau[abs(tau)>1e-6])
+
+# seed = 2022
+# tau <- c(0.000000,  4.263911, -3.589037,  1.481314, 0.000000, 0.000000, -1.297196, 0.000000, 2.481268, 0.000000,  1.007448,  0.000000,  1.578967, -3.077587, -3.437906, rep(0, 2^K-1-15))
+
+tau
+```
+
+
+2. generate a finite population and factorial data
+```{r}
+mu <- as.matrix(design.core) %*% (tau[2:length(tau)])
+
+finite.pop.opts <- list()
+
+# finite.pop initialization
+#finite.pop.opts$dist <- rep("norm", 2^K)
+#finite.pop.opts$avg  <- mu
+#finite.pop.opts$std  <- rep(1, 2^K)
+
+finite.pop.opts$dist <- rep("exp", 2^K)
+finite.pop.opts$mu  <- mu
+finite.pop.opts$rate  <- rep(1, 2^K)
+finite.pop.init <- list(
+  num_pop = num_pop,
+  num_trt_group = num_trt_group,
+  finite.pop.opts = finite.pop.opts
+)
+
+# generate a finite population
+pop_1 <- finite.pop(num_pop, num_trt_group, finite.pop.opts)
+
+# factorial.data opts
+factorial.data.opts <- list()
+
+# factorial.data init
+factorial.data.init <- list(
+  num_factors = K,
+  trt_group_size = trt_group_size,
+  pop = pop_1,
+  factorial.data.opts = factorial.data.opts,
+  finite.pop.init = list()
+)
+
+factorial_data_raw <- factorial.data(K, trt_group_size, pop = pop_1,
+                                factorial.data.opts, finite.pop.init)
+
+factorial_data <- factorial_data_raw$factorial_data
+
+```
+
+
+2.5 raw analysis
+```{r}
+#fit = lm(factorial_data$y ~ as.matrix(design.run))
+#hccm(fit, "hc2")
+```
+
+
+
+3. run trials
+```{r}
+alpha.vec <- rep(0.10/level, level)
+
+simulation.res.strong <- comb.select.trial(factorial.data.init, 
+                                        alpha.vec = alpha.vec, 
+                                        level = level, 
+                                        design.run, design.core,
+                                        Niter = 1000, num.ties = 1)
+# saveRDS(simulation.res.strong, "simulation_small_effects.rds")
+#simulation.res.strong$model.select.res
+#nonzero.effect
+#simulation.res.strong$est.effect.res[[1]]
+#simulation.res.strong$var.effect.res[[1]]
+```
+
+
+4. report results
+```{r}
+# correct.model <- names(simulation.save.strong$tau[abs(simulation.save.strong$tau)>1e-6])
+check.model.selection(simulation.res.strong$model.select.res, nonzero.effect)
+
+# target_weight = design.core$F1/num_trt_group
+mu_pop = factorial_data_raw$subgroup.effect
+
+#target_weight = rep(0, num_trt_group)
+target_weight[1] = 1
+target_weight[2^K] = -1
+true_effect = sum(target_weight * mu_pop)
+
+check.target.coverage(simulation.res.strong, 
+                      design.core, 
+                      target_weight, true_effect)
+```
+
+```{r}
+
+```
+
+
+```{r}
+simulation.res.strong = readRDS("simulation_small_effects.rds")
+```
+
+
+

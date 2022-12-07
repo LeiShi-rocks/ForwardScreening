@@ -1,0 +1,115 @@
+\begin{thebibliography}{}
+
+\bibitem[Andrews et~al., 2019]{andrews2019inference}
+Andrews, I., Kitagawa, T., and McCloskey, A. (2019).
+\newblock Inference on winners.
+\newblock Technical report, National Bureau of Economic Research.
+
+\bibitem[Bien et~al., 2013]{bien2013lasso}
+Bien, J., Taylor, J., and Tibshirani, R. (2013).
+\newblock A lasso for hierarchical interactions.
+\newblock {\em Annals of statistics}, 41(3):1111.
+
+\bibitem[Dasgupta et~al., 2015]{dasgupta2015causal}
+Dasgupta, T., Pillai, N.~S., and Rubin, D.~B. (2015).
+\newblock Causal inference from 2 k factorial designs by using potential
+  outcomes.
+\newblock {\em Journal of the Royal Statistical Society: Series B: Statistical
+  Methodology}, pages 727--753.
+
+\bibitem[Egami and Imai, 2018]{egami2018causal}
+Egami, N. and Imai, K. (2018).
+\newblock Causal interaction in factorial experiments: Application to conjoint
+  analysis.
+\newblock {\em Journal of the American Statistical Association}.
+
+\bibitem[Hao et~al., 2018]{hao2018model}
+Hao, N., Feng, Y., and Zhang, H.~H. (2018).
+\newblock Model selection for high-dimensional quadratic regression via
+  regularization.
+\newblock {\em Journal of the American Statistical Association},
+  113(522):615--625.
+
+\bibitem[Hao and Zhang, 2014]{hao2014interaction}
+Hao, N. and Zhang, H.~H. (2014).
+\newblock Interaction screening for ultrahigh-dimensional data.
+\newblock {\em Journal of the American Statistical Association},
+  109(507):1285--1301.
+
+\bibitem[Haris et~al., 2016]{haris2016convex}
+Haris, A., Witten, D., and Simon, N. (2016).
+\newblock Convex modeling of interactions with strong heredity.
+\newblock {\em Journal of Computational and Graphical Statistics},
+  25(4):981--1004.
+
+\bibitem[Karlan and List, 2007]{karlan2007does}
+Karlan, D. and List, J.~A. (2007).
+\newblock Does price matter in charitable giving? evidence from a large-scale
+  natural field experiment.
+\newblock {\em American Economic Review}, 97(5):1774--1793.
+
+\bibitem[Kuchibhotla et~al., 2022]{kuchibhotla2022post}
+Kuchibhotla, A.~K., Kolassa, J.~E., and Kuffner, T.~A. (2022).
+\newblock Post-selection inference.
+\newblock {\em Annual Review of Statistics and Its Application}, 9:505--527.
+
+\bibitem[Lee and Shen, 2018]{lee2018winner}
+Lee, M.~R. and Shen, M. (2018).
+\newblock Winner's curse: Bias estimation for total effects of features in
+  online controlled experiments.
+\newblock In {\em Proceedings of the 24th ACM SIGKDD International Conference
+  on Knowledge Discovery \& Data Mining}, pages 491--499.
+
+\bibitem[Li and Ding, 2017]{li2017general}
+Li, X. and Ding, P. (2017).
+\newblock General forms of finite population central limit theorems with
+  applications to causal inference.
+\newblock {\em Journal of the American Statistical Association},
+  112(520):1759--1769.
+
+\bibitem[Lim and Hastie, 2015]{lim2015learning}
+Lim, M. and Hastie, T. (2015).
+\newblock Learning interactions via hierarchical group-lasso regularization.
+\newblock {\em Journal of Computational and Graphical Statistics},
+  24(3):627--654.
+
+\bibitem[Pashley and Bind, 2019]{pashley2019causal}
+Pashley, N.~E. and Bind, M.-A.~C. (2019).
+\newblock Causal inference for multiple non-randomized treatments using
+  fractional factorial designs.
+\newblock {\em arXiv e-prints}, pages arXiv--1905.
+
+\bibitem[Wang, 2009]{wang2009forward}
+Wang, H. (2009).
+\newblock Forward regression for ultra-high dimensional variable screening.
+\newblock {\em Journal of the American Statistical Association},
+  104(488):1512--1524.
+
+\bibitem[Wasserman and Roeder, 2009]{wasserman2009high}
+Wasserman, L. and Roeder, K. (2009).
+\newblock High dimensional variable selection.
+\newblock {\em Annals of statistics}, 37(5A):2178.
+
+\bibitem[Wei et~al., 2022]{wei2022inference}
+Wei, W., Zhou, Y., Zheng, Z., and Wang, J. (2022).
+\newblock Inference on the best policies with many covariates.
+\newblock {\em arXiv preprint arXiv:2206.11868}.
+
+\bibitem[Wu and Hamada, 2011]{wu2011experiments}
+Wu, C.~J. and Hamada, M.~S. (2011).
+\newblock {\em Experiments: planning, analysis, and optimization}, volume 552.
+\newblock John Wiley \& Sons.
+
+\bibitem[Zhao and Ding, 2021a]{zhao2021covariate}
+Zhao, A. and Ding, P. (2021a).
+\newblock Covariate-adjusted fisher randomization tests for the average
+  treatment effect.
+\newblock {\em Journal of Econometrics}, 225(2):278--294.
+
+\bibitem[Zhao and Ding, 2021b]{zhao2021regression}
+Zhao, A. and Ding, P. (2021b).
+\newblock Regression-based causal inference with factorial experiments:
+  estimands, model specifications, and design-based properties.
+\newblock {\em arXiv preprint arXiv:2101.02400}.
+
+\end{thebibliography}
