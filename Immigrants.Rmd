@@ -1,0 +1,196 @@
+---
+title: "Immigrants"
+author: "Lei Shi"
+date: "2023-11-27"
+output: pdf_document
+---
+
+```{r setup, include=FALSE} 
+knitr::opts_chunk$set(warning = FALSE, message = FALSE) 
+```
+
+```{r}
+library(dplyr)
+library(ggplot2)
+library(tidyverse)
+library(glmnet)
+setwd("/Users/leishi/Documents/Research/ForwardScreening")
+source("auxillary_functions.R")
+```
+
+## Analyze immigrants data
+
+The first dataset is taken from the paper: https://www.cambridge.org/core/journals/political-analysis/article/estimating-and-using-individual-marginal-component-effects-from-conjoint-experiments/FE284F17AB91A18673CC33276FF45D34. It is a conjoint survey experiment, which generates fake profiles of immigrants into US and evaluate the effect of six factors: age, gender, race, education, language, prior trips to US. The outcome is a rate of acceptance by respondents. In this case, $K = 6$ and the total sample size is $27833$ after removing missing responses. 
+
+### Preprocessing of the dataset
+```{r}
+library(haven)
+data_03_conjoint_processed = read_dta("replication_materials (1)/data/data_03_conjoint_processed.dta")
+# View(data_03_conjoint_processed)
+head(data_03_conjoint_processed, 5)
+```
+
+
+```{r}
+factorial_immigrants = data_03_conjoint_processed %>% 
+  dplyr::select(rate, age_bin, sex_bin, race_bin, educ_bin, lang_bin, trip_bin) %>%
+  rename(y = rate, 
+         F1 = age_bin,
+         F2 = sex_bin,
+         F3 = race_bin,
+         F4 = educ_bin,
+         F5 = lang_bin,
+         F6 = trip_bin) %>%
+  mutate(F1 = F1 - 1,
+         F2 = F2 - 1,
+         F3 = F3 - 1,
+         F4 = F4 - 1,
+         F5 = F5 - 1,
+         F6 = F6 - 1) %>%
+  drop_na()
+
+head(factorial_immigrants, 5)
+num_pop = nrow(factorial_immigrants)
+num_pop
+# forward.select.opts
+```
+
+
+
+### LASSO selection
+
+We first test out our forward screening procedure with LASSO as a selector and strong heredity as the forward structure. 
+
+```{r}
+# source("auxillary_functions.R")
+
+forward.select.opts <- list()
+
+# heredity.proceed.init <- list()
+heredity.proceed.init <- list(
+  criterion = "strong"
+)
+
+# model.selection.init
+model.selection.opts <- list(
+  correction.type = "hc0",
+  robust.flag = TRUE,
+  best_lambda_choice = "lambda.min"
+)
+model.selection.init <- list(
+  method = "LASSO",
+  model.selection.opts = model.selection.opts
+)
+
+forward.select(factorial_data = factorial_immigrants, 
+               alpha.vec = rep(0.05/6, 6),
+               wt = NULL,
+               level = 6L,
+               forward.select.opts = forward.select.opts,
+               heredity.proceed.init = heredity.proceed.init,
+               model.selection.init = model.selection.init
+)
+```
+
+The results are nice! Selected five main effects and five two-way interactions. The interaction terms follow the strong heredity structure. It actually verifies that in this example, the three-way and higher-order interactions are zero (instead of assuming this to be true).
+
+As a comparison, we perform LASSO directly on the full data, without forward screening and any heredity principle:
+
+```{r message=FALSE, warning=FALSE}
+# prepare full data
+data.full <- data.frame(2 * factorial_immigrants[, -1] - 1)
+data.full <- model.matrix(as.formula(paste0("~.^", 6)), data = data.full)
+data.full <- data.frame(data.full[, -1])
+data.full <- cbind(factorial_immigrants["y"], data.full)
+
+wt = factorial_immigrants %>% group_by(across(c(-y))) %>% 
+  mutate(num=n()) %>% ungroup() %>% 
+  mutate(inv_num = num_pop/num) %>% 
+  dplyr::select(inv_num)
+wt = wt$inv_num
+
+pre_selected_model = colnames(factor.design(6, trt_group_size = rep(1,2^6), interaction = 6, centering = 1/2))
+
+model.selection.opts <- setOpts(model.selection.init, "model.selection.opts", list())
+model.selection.opts$alpha <- 0.05/6
+model.selection.opts$test_model <- paste0("F", 1:6)
+model.selection.opts$best_lambda_choice <- "lambda.min"
+model.selection.opts$test_model = pre_selected_model
+
+
+model.selection(data.full, 
+                pre_selected_model = pre_selected_model, 
+                wt = wt,
+                method = "LASSO",
+                model.selection.opts = model.selection.opts)
+
+# fit.lm = lm("y~.", data = data.full, weights = wt)
+# print(sort(abs(fit.lm$coefficients), decreasing = T))
+```
+We see that while a sparse model is selected, for some levels the structure between effects break down. For example, the interaction "F1.F2.F4.F6" is selected but none of its three-way parents belongs to the working model. Nevertheless, the first three layers of the selected effects follow the weak heredity structure, which partially verify the effect heredity principle for lower order effects. 
+
+### Bonferroni corrected marginal t test
+
+Next, we test out forward screening based on Bonferroni corrected t test with strong heredity. 
+```{r}
+# source("auxillary_functions.R")
+
+forward.select.opts <- list()
+
+# heredity.proceed.init <- list()
+heredity.proceed.init <- list(
+  criterion = "strong"
+)
+
+# model.selection.init
+model.selection.opts <- list(
+  correction.type = "hc0",
+  robust.flag = TRUE
+)
+model.selection.init <- list(
+  method = "Bonferroni",
+  model.selection.opts = model.selection.opts
+)
+
+forward.select(factorial_data = factorial_immigrants, 
+               alpha.vec = rep(0.05/6, 6),
+               wt = NULL,
+               level = 6L,
+               forward.select.opts = forward.select.opts,
+               heredity.proceed.init = heredity.proceed.init,
+               model.selection.init = model.selection.init
+)
+```
+
+A sparser model is selected, compared to LASSO. But the results are subject to tuning. 
+
+
+
+For a comparison, the following codes run Bonferroni corrected t tests on the full dataset, without any correction procedure:
+```{r}
+# prepare full data
+data.full <- data.frame(2 * factorial_immigrants[, -1] - 1)
+data.full <- model.matrix(as.formula(paste0("~.^", 6)), data = data.full)
+data.full <- data.frame(data.full[, -1])
+data.full <- cbind(factorial_immigrants["y"], data.full)
+
+wt = factorial_immigrants %>% group_by(across(c(-y))) %>% 
+  mutate(num=n()) %>% ungroup() %>% 
+  mutate(inv_num = num_pop/num) %>% 
+  dplyr::select(inv_num)
+wt = wt$inv_num
+
+pre_selected_model = colnames(factor.design(6, trt_group_size = rep(1,2^6), interaction = 6, centering = 1/2))
+
+model.selection(data.full, 
+                pre_selected_model = pre_selected_model, 
+                wt = wt,
+                method = "Bonferroni")
+
+
+```
+
+However, the selected model is the same as forward screening. So might not be a good example here showing the superiority of forward screening. Again, this might be subject to the tuning choices. 
+
+
+

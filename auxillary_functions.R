@@ -529,13 +529,7 @@ model.selection <- function(dataIn, pre_selected_model, wt = NULL,
                             method = "Bonferroni", model.selection.opts = list()){
   # If pre_selected_model and test_model is not the same, define test_model
   # print(pre_selected_model)
-  if (is.null(model.selection.opts$test_model)){
-    test_model <- pre_selected_model
-  }
-  else
-  {
-    test_model <- model.selection.opts$test_model
-  }
+  test_model <- setOpts(model.selection.opts, "test_model", pre_selected_model)
   
   if (is.null(wt)){
     wt <- rep(1, nrow(dataIn))
@@ -586,8 +580,10 @@ model.selection <- function(dataIn, pre_selected_model, wt = NULL,
     
     for (ind in 1:length(test_model)){
       term <- test_model[ind]
-      #print(point.estimates)
+      # print(point.estimates[term])
+      # print(std.est)
       t_val <- abs(point.estimates[term]) / (std.est[term])
+      # print(t_val)
       t_val.store[ind] <- t_val
       if (t_val <= q.tail.bfr){
         working_flag[ind] <- FALSE
@@ -608,16 +604,27 @@ model.selection <- function(dataIn, pre_selected_model, wt = NULL,
       warning("Cannot run lasso since model is too small!")
     }
     else{
+      best_lambda_choice = setOpts(model.selection.opts, "best_lambda_choice", "lambda.1se")
       X <- as.matrix(dataIn[, pre_selected_model]) 
       y <- as.matrix(dataIn$y)
-      cv_model <- cv.glmnet(X, y, alpha = 1, weights = wt)
-      best_lambda <- cv_model$lambda.1se
+      
+      ncv = setOpts(model.selection.opts, "ncv", 50)
+      print(paste("ncv:", ncv))
+      best_lambda_array = rep(0, ncv)
+      for (cv_trial in 1:ncv){
+        cv_model <- cv.glmnet(X, y, alpha = 1, weights = wt)
+        best_lambda_array[cv_trial] <- cv_model[[best_lambda_choice]]
+      }
+      best_lambda = mean(best_lambda_array)
+      
       # best_lambda
       #-- plot(cv_model)
+      # best_lambda = 0.01
       fit.model <- glmnet(X, y, alpha = 1, lambda = best_lambda, weights = wt)
-      coeff <- coef(fit.model) 
+      coeff <- coef(fit.model)
       # a special data structure called "dgCMatrix", which is designed for sparse matrix.
-      post_working_model <- intersect(test_model, coeff@Dimnames[[1]][1+coeff@i])
+      post_working_model <- intersect(test_model, 
+                                      coeff@Dimnames[[1]][1+coeff@i[abs(coeff@x) > 1e-4]])
     }
   }
   else{
@@ -659,6 +666,7 @@ forward.select <- function(factorial_data,  alpha.vec, wt = NULL, level = 1L,
   ## we will be using model.selection(), so need to initialize the parameters
   method <- setOpts(model.selection.init, "method", "Bonferroni")
   model.selection.opts <- setOpts(model.selection.init, "model.selection.opts", list())
+
   
   ## initialize heredity.proceed
   criterion <- setOpts(heredity.proceed.init, "criterion", "full")
@@ -690,16 +698,20 @@ forward.select <- function(factorial_data,  alpha.vec, wt = NULL, level = 1L,
   pre_selected_model <- c(selected_model, working_model)
   
   # Select main effects
-  model.selection.opts <- setOpts(model.selection.init, "model.selection.opts", list())
+  # model.selection.opts <- setOpts(model.selection.init, "model.selection.opts", list())
   model.selection.opts$alpha <- alpha.vec[1]
   model.selection.opts$test_model <- working_model
   
   
   
-  raw_model <- model.selection(data.full, pre_selected_model, wt, method, model.selection.opts)
+  
+  raw_model <- model.selection(data.full, pre_selected_model, 
+                               wt, method, model.selection.opts)
+  # print(wt)
   working_model <- raw_model$post_working_model
   selected_model <- c(selected_model, working_model)
   fit.model[[1]] <- raw_model$fit.model
+  # print(selected_model)
   
   
   # Select interactions
@@ -913,7 +925,8 @@ comb.select.trial <- function(factorial.data.init, alpha.vec, level,
         # model.selection.init
         model.selection.opts <- list(
           correction.type = "hc0",
-          robust.flag = TRUE
+          robust.flag = TRUE,
+          ncv = 1
         )
         model.selection.init <- list(
           method = running.method,
@@ -926,7 +939,8 @@ comb.select.trial <- function(factorial.data.init, alpha.vec, level,
         
         selected_model = selected.model.output$selected_model
         simulation.res$model.select.res[[iter]][[running.tag]] <- selected_model
-        
+        # print(selected_model)
+        # print(paste("y~", paste(selected_model, collapse = "+")))
         form <- as.formula(paste("y~", paste(selected_model, collapse = "+")))
         fit.model <- lm(form, data = data.full, weights = wt)
         simulation.res$est.effect.res[[iter]][[running.tag]] <- fit.model$coefficients
@@ -1019,7 +1033,8 @@ comb.select.trial <- function(factorial.data.init, alpha.vec, level,
         select.model.output <- model.selection(running.factorial_data, 
                                                pre_selected_model, 
                                                wt = wt,
-                                               method = "LASSO")
+                                               method = "LASSO", 
+                                               model.selection.opts = list(ncv = 1))
         selected_model <- select.model.output$post_working_model
         simulation.res$model.select.res[[iter]][[running.tag]] <- selected_model
         

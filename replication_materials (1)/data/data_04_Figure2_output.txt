@@ -1,0 +1,14 @@
+                       m1             
+                        b           se
+     Older          0.000            .
+     Young          0.032        0.034
+     Male           0.000            .
+     Female         0.087        0.035
+Non-white           0.000            .
+     White         -0.013        0.042
+Less than ~e        0.000            .
+Some colle~r        0.665        0.044
+     Poor           0.000            .
+     Good           0.626        0.043
+Violation           0.000            .
+No violation        1.474        0.071

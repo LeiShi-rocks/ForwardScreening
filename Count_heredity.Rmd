@@ -1,0 +1,116 @@
+---
+title: "Count_heredity_terms"
+author: "Lei Shi"
+date: "2023-11-24"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+setwd("~/Documents/Research/ForwardScreening")
+library(ggplot2)
+library(dplyr)
+source("auxillary_functions.R")
+```
+
+## Count heredity terms
+```{r}
+start = 3
+K = 8
+# working_model = ""
+# working_model = c("F1.F2.F3")
+# working_model = c("F1.F2.F3", "F4.F5.F6")
+# working_model = c("F1.F2.F3", "F4.F5.F6", "F6.F7.F8")
+# working_model = c("F1.F2.F3", "F4.F5.F6", "F1.F7.F8", "F2.F4.F7", "F2.F5.F8", "F3.F6.F7")
+# working_model = c("F1.F2.F3", "F1.F2.F4", "F1.F2.F5", "F1.F6.F7", "F1.F7.F8")
+count_heredity = function(start, K, working_model){
+  count = length(working_model) + sum(choose(K, 1:(start-1)))
+  for (ind in start:(K-1)){
+    working_model = heredity.proceed.new(K, working_model, ind, criterion = "weak")$working_model
+    count = count + length(working_model)
+  }
+  count
+}
+
+three_way_terms = heredity.proceed.new(8, c("F1.F2"), 2, "full")$working_model
+niter = 2000
+
+max_heredity_count = function(s){
+  model_list = lapply(1:niter, function(x) {sample(three_way_terms, s)})
+  results = sapply(1:niter, function(x) {count_heredity(start, K, model_list[[x]])})
+  ind = which.max(results)
+  print(results[ind])
+  list(results[ind], model_list[[ind]])
+}
+
+# s = 3
+model_list_s3 = lapply(1:niter, function(x) {sample(three_way_terms, 3)})
+results_s3 = sapply(1:niter, function(x) {count_heredity(start, K, model_list_s3[[x]])})
+print(max(results_s3))
+
+# s = 4
+model_list_s4 = lapply(1:niter, function(x) {sample(three_way_terms, 4)})
+results_s4 = sapply(1:niter, function(x) {count_heredity(start, K, model_list_s4[[x]])})
+print(max(results_s4))
+
+# s = 5
+model_list_s5 = lapply(1:niter, function(x) {sample(three_way_terms, 5)})
+results_s5 = sapply(1:niter, function(x) {count_heredity(start, K, model_list_s5[[x]])})
+print(max(results_s5))
+
+# s = 6
+model_list_s6 = lapply(1:niter, function(x) {sample(three_way_terms, 6)})
+results_s6 = sapply(1:niter, function(x) {count_heredity(start, K, model_list_s6[[x]])})
+print(max(results_s6))
+
+print(c(max(results_s3), max(results_s4), max(results_s5), max(results_s6)))
+print(2^K)
+```
+
+```{r}
+start = 3
+K = 8
+# working_model = ""
+# working_model = c("F1.F2.F3")
+# working_model = c("F1.F2.F3", "F4.F5.F6")
+# working_model = c("F1.F2.F3", "F4.F5.F6", "F6.F7.F8")
+# working_model = c("F1.F2.F3", "F4.F5.F6", "F1.F7.F8", "F2.F4.F7", "F2.F5.F8", "F3.F6.F7")
+# working_model = c("F1.F2.F3", "F1.F2.F4", "F1.F2.F5", "F1.F6.F7", "F1.F7.F8")
+count_heredity = function(start, K, working_model){
+  count = length(working_model) + sum(choose(K, 1:(start-1)))
+  for (ind in start:(K-1)){
+    working_model = heredity.proceed.new(K, working_model, ind, criterion = "weak")$working_model
+    count = count + length(working_model)
+  }
+  count
+}
+
+three_way_terms = heredity.proceed.new(K, c("F1.F2"), 2, "full")$working_model
+niter = 1000
+
+max_heredity_count = function(s){
+  model_list = lapply(1:niter, function(x) {sample(three_way_terms, s)})
+  results = sapply(1:niter, function(x) {count_heredity(start, K, model_list[[x]])})
+  ind = which.max(results)
+  print(results[ind])
+  list(results[ind], model_list[[ind]])
+}
+
+res = lapply(1:56, function(s) {max_heredity_count(s)})
+
+saveRDS(res, file = "count_heredity_res.RData")
+```
+
+```{r}
+plotDF = data.frame(s3 = 0:56, model_size = c(0, sapply(1:56, function(x) {res[[x]][[1]]})))
+count_heredity_plot = plotDF %>% ggplot(aes(x = s3, y = model_size)) +
+  geom_line() +
+  geom_point() + 
+  geom_hline(yintercept = 255, lty = 2) + 
+  scale_x_continuous(breaks = seq(0, 56, by = 5)) + 
+  scale_y_continuous(breaks = seq(0, 256, by = 25)) + 
+  labs(y = "Maximal Model Size", x = "Number of Nonzero Three-way Interactions") + 
+  theme_classic(base_size = 20)
+count_heredity_plot
+ggsave("count_heredity_plot.pdf", plot = count_heredity_plot, device = "pdf")
+```
+

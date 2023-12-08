@@ -1,0 +1,23 @@
+                       m1             
+                        b           se
+age_int            -0.002        0.002
+     Male           0.000            .
+     Female         0.087        0.035
+1.race_cat          0.000            .
+2.race_cat          0.006        0.051
+3.race_cat          0.011        0.050
+4.race_cat          0.016        0.050
+1.educ_cat          0.000            .
+2.educ_cat          0.051        0.058
+3.educ_cat          0.355        0.058
+4.educ_cat          0.674        0.063
+5.educ_cat          0.846        0.067
+6.educ_cat          0.872        0.066
+1.lang_cat          0.000            .
+2.lang_cat          0.149        0.049
+3.lang_cat          0.638        0.055
+4.lang_cat          0.763        0.056
+1.trip_cat          0.000            .
+2.trip_cat          0.344        0.065
+3.trip_cat          1.338        0.080
+4.trip_cat          1.955        0.087

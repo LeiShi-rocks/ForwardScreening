@@ -1,0 +1,147 @@
+{smcl}
+{com}{sf}{ul off}{txt}{.-}
+      name:  {res}<unnamed>
+  {txt}log type:  {res}smcl
+ {txt}opened on:  {res}16 Dec 2020, 15:09:07
+{txt}
+{com}. 
+. foreach var of varlist imce_????? ///
+> {c -(}
+{txt}  2{com}.   sum `var', detail
+{txt}  3{com}.         sktest `var', noadjust
+{txt}  4{com}. {c )-}
+
+                         {txt}imce_young
+{hline 61}
+      Percentiles      Smallest
+ 1%    {res}-2.466667          -3.65
+{txt} 5%    {res}-1.410714      -3.124402
+{txt}10%    {res}-.9285714      -3.107143       {txt}Obs         {res}        928
+{txt}25%    {res}-.4099691      -3.045249       {txt}Sum of Wgt. {res}        928
+
+{txt}50%    {res} .0336942                      {txt}Mean          {res} .0148479
+                        {txt}Largest       Std. Dev.     {res}  .853361
+{txt}75%    {res} .4898796       2.633929
+{txt}90%    {res} .9732143       3.026786       {txt}Variance      {res}  .728225
+{txt}95%    {res} 1.334842       3.217195       {txt}Skewness      {res}-.2513663
+{txt}99%    {res} 2.349206       3.571429       {txt}Kurtosis      {res} 5.089993
+
+{txt}Skewness and kurtosis tests for normality
+{col 58}{hline 3} Joint test {hline 3}
+{col 5}Variable {c |}{col 22}Obs   Pr(skewness)   Pr(kurtosis)   chi2(2)  Prob>chi2
+{hline 13}{c +}{hline 61}
+  imce_young {c |}{res}{col 16}      928{col 34}0.0019{col 49}0.0000{col 56}    58.34{col 70}0.0000
+
+                         {txt}imce_femal
+{hline 61}
+      Percentiles      Smallest
+ 1%    {res} -2.37799      -5.113636
+{txt} 5%    {res}-1.277778      -4.124402
+{txt}10%    {res}-.9333333      -3.055556       {txt}Obs         {res}        928
+{txt}25%    {res}-.3623737      -3.054299       {txt}Sum of Wgt. {res}        928
+
+{txt}50%    {res} .0666667                      {txt}Mean          {res} .0698389
+                        {txt}Largest       Std. Dev.     {res} .8618761
+{txt}75%    {res} .5267857       2.870192
+{txt}90%    {res} 1.071429       3.008929       {txt}Variance      {res} .7428304
+{txt}95%    {res} 1.466667       3.053571       {txt}Skewness      {res}-.2128734
+{txt}99%    {res} 2.205357       5.076923       {txt}Kurtosis      {res} 6.783178
+
+{txt}Skewness and kurtosis tests for normality
+{col 58}{hline 3} Joint test {hline 3}
+{col 5}Variable {c |}{col 22}Obs   Pr(skewness)   Pr(kurtosis)   chi2(2)  Prob>chi2
+{hline 13}{c +}{hline 61}
+  imce_femal {c |}{res}{col 16}      928{col 34}0.0083{col 49}0.0000{col 56}    94.12{col 70}0.0000
+
+                         {txt}imce_white
+{hline 61}
+      Percentiles      Smallest
+ 1%    {res}   -2.875      -7.613636
+{txt} 5%    {res}-1.714286      -5.482759
+{txt}10%    {res}-1.190476          -5.16       {txt}Obs         {res}        928
+{txt}25%    {res}-.5704033      -3.614907       {txt}Sum of Wgt. {res}        928
+
+{txt}50%    {res}-.0227273                      {txt}Mean          {res}-.0198971
+                        {txt}Largest       Std. Dev.     {res} 1.079348
+{txt}75%    {res}      .48       3.482759
+{txt}90%    {res}     1.25       3.827751       {txt}Variance      {res} 1.164992
+{txt}95%    {res} 1.761905       4.770186       {txt}Skewness      {res}-.3310919
+{txt}99%    {res}     2.88          5.625       {txt}Kurtosis      {res} 8.349914
+
+{txt}Skewness and kurtosis tests for normality
+{col 58}{hline 3} Joint test {hline 3}
+{col 5}Variable {c |}{col 22}Obs   Pr(skewness)   Pr(kurtosis)   chi2(2)  Prob>chi2
+{hline 13}{c +}{hline 61}
+  imce_white {c |}{res}{col 16}      928{col 34}0.0001{col 49}0.0000{col 56}   131.74{col 70}0.0000
+
+                         {txt}imce_collg
+{hline 61}
+      Percentiles      Smallest
+ 1%    {res}-1.964286      -4.138889
+{txt} 5%    {res}-.9333333      -2.892857
+{txt}10%    {res}-.5022625      -2.866667       {txt}Obs         {res}        928
+{txt}25%    {res}-.0666667      -2.533333       {txt}Sum of Wgt. {res}        928
+
+{txt}50%    {res} .4539229                      {txt}Mean          {res} .6723439
+                        {txt}Largest       Std. Dev.     {res} 1.214032
+{txt}75%    {res} 1.302503       5.866071
+{txt}90%    {res} 2.222222       6.669643       {txt}Variance      {res} 1.473874
+{txt}95%    {res} 2.821429       6.794643       {txt}Skewness      {res} .9361287
+{txt}99%    {res} 4.230769       7.194445       {txt}Kurtosis      {res} 6.041626
+
+{txt}Skewness and kurtosis tests for normality
+{col 58}{hline 3} Joint test {hline 3}
+{col 5}Variable {c |}{col 22}Obs   Pr(skewness)   Pr(kurtosis)   chi2(2)  Prob>chi2
+{hline 13}{c +}{hline 61}
+  imce_collg {c |}{res}{col 16}      928{col 34}0.0000{col 49}0.0000{col 56}   172.89{col 70}0.0000
+
+                         {txt}imce_engls
+{hline 61}
+      Percentiles      Smallest
+ 1%    {res}-1.555556       -4.38914
+{txt} 5%    {res}-.8733032      -3.443439
+{txt}10%    {res} -.520362           -2.4       {txt}Obs         {res}        928
+{txt}25%    {res}-.0561975      -1.968326       {txt}Sum of Wgt. {res}        928
+
+{txt}50%    {res}       .5                      {txt}Mean          {res} .6534283
+                        {txt}Largest       Std. Dev.     {res}  1.16551
+{txt}75%    {res} 1.160634       5.678571
+{txt}90%    {res} 2.138889       6.126984       {txt}Variance      {res} 1.358415
+{txt}95%    {res} 2.666667       8.181818       {txt}Skewness      {res} 1.250287
+{txt}99%    {res} 4.368421       8.526316       {txt}Kurtosis      {res}  8.47078
+
+{txt}Skewness and kurtosis tests for normality
+{col 58}{hline 3} Joint test {hline 3}
+{col 5}Variable {c |}{col 22}Obs   Pr(skewness)   Pr(kurtosis)   chi2(2)  Prob>chi2
+{hline 13}{c +}{hline 61}
+  imce_engls {c |}{res}{col 16}      928{col 34}0.0000{col 49}0.0000{col 56}   272.32{col 70}0.0000
+
+                         {txt}imce_authr
+{hline 61}
+      Percentiles      Smallest
+ 1%    {res}-1.305556      -3.055556
+{txt} 5%    {res}-.6651584          -2.25
+{txt}10%    {res}-.3055556      -1.944444       {txt}Obs         {res}        928
+{txt}25%    {res} .1202367      -1.805556       {txt}Sum of Wgt. {res}        928
+
+{txt}50%    {res} .7708064                      {txt}Mean          {res} 1.480152
+                        {txt}Largest       Std. Dev.     {res} 2.040348
+{txt}75%    {res}  2.38914       9.166667
+{txt}90%    {res} 4.317461       9.277778       {txt}Variance      {res} 4.163019
+{txt}95%    {res} 5.666667       9.833333       {txt}Skewness      {res} 1.429849
+{txt}99%    {res} 8.416667             10       {txt}Kurtosis      {res} 5.042535
+
+{txt}Skewness and kurtosis tests for normality
+{col 58}{hline 3} Joint test {hline 3}
+{col 5}Variable {c |}{col 22}Obs   Pr(skewness)   Pr(kurtosis)   chi2(2)  Prob>chi2
+{hline 13}{c +}{hline 61}
+  imce_authr {c |}{res}{col 16}      928{col 34}0.0000{col 49}0.0000{col 56}   233.34{col 70}0.0000
+{txt}
+{com}. 
+. log close
+      {txt}name:  {res}<unnamed>
+  {txt}log type:  {res}smcl
+ {txt}closed on:  {res}16 Dec 2020, 15:09:07
+{txt}{.-}
+{smcl}
+{txt}{sf}{ul off}

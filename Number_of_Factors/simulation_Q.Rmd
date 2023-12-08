@@ -1,0 +1,399 @@
+---
+title: "Simulation"
+author: "Lei Shi"
+date: "2022-11-23"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+library("dplyr")
+options(dplyr.summarise.inform = FALSE)
+library("latex2exp")
+library("ggplot2")
+library("tidyverse")
+if(!require("AlgDesign")){
+  install.packages("AlgDesign")
+  library("AlgDesign")
+}
+library("car")
+library("glmnet")
+source("/Users/leishi/Documents/Research/ForwardScreening/auxillary_functions.R")
+```
+
+```{r}
+K_choice = seq(7, 11, by = 1)
+N0 = 2
+Niter = 20
+effect_size = 0.5
+```
+
+
+1. Determine the factorial effect sizes.
+```{r}
+
+for (K in K_choice){
+  # basic parameter setup
+  num_trt_group = 2^K
+  trt_group_size = rep(N0, 2^K)
+  num_pop = sum(trt_group_size)
+  level = K
+  
+  
+  design.core <- factor.design(K, trt_group_size = rep(1,2^K), interaction = level, centering = 1/2)
+  data.ind <- factor.design(K, trt_group_size = trt_group_size, 1)
+  design.run <- factor.design(K, trt_group_size = trt_group_size, interaction = level, centering = 1/2)
+  
+  # seed 
+  set.seed(2022)
+  tau = rep(0, sum(choose(K,0:level)))
+  tau[1] = runif(choose(K,0), 0.044*5, 10*0.044) * sign(runif(choose(K,0),-1, 1))
+  tau[(sum(choose(K,0:0))+1):sum(choose(K,0:1))] = effect_size * sign(runif(choose(K,1),-1, 1))
+  tau[(sum(choose(K,0:1))+1):sum(choose(K,0:2))] = effect_size/2 * sign(runif(choose(K,2),-1, 1))
+  #runif(choose(K,2), 0.044*4, 5*0.044) * sign(runif(choose(K,2),-1, 1)) * rbinom(choose(K,2), 1, 0.7)
+  
+  #tau <- c(
+  #  runif(choose(K,0), 0.044*5, 10*0.044) * sign(runif(choose(K,0),-1, 1)),
+  #  runif(choose(K,1), 0.044*5, 10*0.044) * sign(runif(choose(K,1),-1, 1)),
+  #  runif(choose(K,2), 0.044*1, 5*0.044) * sign(runif(choose(K,2),-1, 1)) * rbinom(choose(K,2), 1, 0.7),
+  #)
+  
+  
+  # effects
+  names(tau) <- c("(Intecept)", names(design.core))
+  
+  # non-zeros
+  nonzero.effect <- paste0("F", 1:5)
+  nonzero.effect <- c(nonzero.effect, 
+                      heredity.proceed.new(K, nonzero.effect, 1,
+                                           "strong")$working_model)
+  zero.effect <- setdiff(names(tau), nonzero.effect)
+  tau[zero.effect] <- 0
+  nonzero.effect = names(tau[abs(tau)>1e-6])
+  
+  # seed = 2022
+  # tau <- c(0.000000,  4.263911, -3.589037,  1.481314, 0.000000, 0.000000, -1.297196, 0.000000, 2.481268, 0.000000,  1.007448,  0.000000,  1.578967, -3.077587, -3.437906, rep(0, 2^K-1-15))
+  
+  #tau
+  mu <- as.matrix(design.core) %*% (tau[2:length(tau)])
+  
+  finite.pop.opts <- list()
+  
+  # finite.pop initialization
+  #finite.pop.opts$dist <- rep("norm", 2^K)
+  #finite.pop.opts$avg  <- mu
+  #finite.pop.opts$std  <- rep(1, 2^K)
+  
+  finite.pop.opts$dist <- rep("exp", 2^K)
+  finite.pop.opts$mu  <- mu
+  finite.pop.opts$rate  <- rep(1, 2^K)
+  finite.pop.init <- list(
+    num_pop = num_pop,
+    num_trt_group = num_trt_group,
+    finite.pop.opts = finite.pop.opts
+  )
+  
+  # generate a finite population
+  pop_1 <- finite.pop(num_pop, num_trt_group, finite.pop.opts)
+  
+  # factorial.data opts
+  factorial.data.opts <- list()
+  
+  # factorial.data init
+  factorial.data.init <- list(
+    num_factors = K,
+    trt_group_size = trt_group_size,
+    pop = pop_1,
+    factorial.data.opts = factorial.data.opts,
+    finite.pop.init = list()
+  )
+  
+  factorial_data_raw <- factorial.data(K, trt_group_size, pop = pop_1,
+                                       factorial.data.opts, finite.pop.init)
+  
+  factorial_data <- factorial_data_raw$factorial_data
+  
+  #
+  alpha.vec <- rep(0.10/level, level)
+
+  if (TRUE){
+    simulation.res.strong <- comb.select.trial(factorial.data.init, 
+                                        alpha.vec = alpha.vec, 
+                                        level = level, 
+                                        design.run, design.core,
+                                        Niter = Niter, num.ties = 1)
+  
+    saveRDS(simulation.res.strong, paste0("simulation_large_effects_K_", K, ".rds"))
+  }
+  
+}
+
+```
+
+# generate report information
+```{r fig.height=8, fig.width=10}
+# N0_choice = c(seq(2, 12, by = 2), 15, 20)
+Niter = Niter
+K_choice = seq(7, 11, by = 1)
+model_report = list()
+coverage_report = list()
+N0 = 2
+for (K_ind in 1:5){
+  K = K_choice[K_ind]
+  # basic parameter setup
+  num_trt_group = 2^K
+  trt_group_size = rep(N0, 2^K)
+  num_pop = sum(trt_group_size)
+  level = K
+  
+  
+  design.core <- factor.design(K, trt_group_size = rep(1,2^K), interaction = level, centering = 1/2)
+  data.ind <- factor.design(K, trt_group_size = trt_group_size, 1)
+  design.run <- factor.design(K, trt_group_size = trt_group_size, interaction = level, centering = 1/2)
+  
+  # seed 
+  set.seed(2022)
+  tau = rep(0, sum(choose(K,0:level)))
+  tau[1] = runif(choose(K,0), 0.044*5, 10*0.044) * sign(runif(choose(K,0),-1, 1))
+  tau[(sum(choose(K,0:0))+1):sum(choose(K,0:1))] = effect_size * sign(runif(choose(K,1),-1, 1))
+  tau[(sum(choose(K,0:1))+1):sum(choose(K,0:2))] = effect_size/2 * sign(runif(choose(K,2),-1, 1))
+  #runif(choose(K,2), 0.044*4, 5*0.044) * sign(runif(choose(K,2),-1, 1)) * rbinom(choose(K,2), 1, 0.7)
+  
+  #tau <- c(
+  #  runif(choose(K,0), 0.044*5, 10*0.044) * sign(runif(choose(K,0),-1, 1)),
+  #  runif(choose(K,1), 0.044*5, 10*0.044) * sign(runif(choose(K,1),-1, 1)),
+  #  runif(choose(K,2), 0.044*1, 5*0.044) * sign(runif(choose(K,2),-1, 1)) * rbinom(choose(K,2), 1, 0.7),
+  #)
+  
+  
+  # effects
+  names(tau) <- c("(Intecept)", names(design.core))
+  
+  # non-zeros
+  nonzero.effect <- paste0("F", 1:5)
+  nonzero.effect <- c(nonzero.effect, 
+                      heredity.proceed.new(K, nonzero.effect, 1,
+                                           "strong")$working_model)
+  zero.effect <- setdiff(names(tau), nonzero.effect)
+  tau[zero.effect] <- 0
+  nonzero.effect = names(tau[abs(tau)>1e-6])
+  
+  # seed = 2022
+  # tau <- c(0.000000,  4.263911, -3.589037,  1.481314, 0.000000, 0.000000, -1.297196, 0.000000, 2.481268, 0.000000,  1.007448,  0.000000,  1.578967, -3.077587, -3.437906, rep(0, 2^K-1-15))
+  
+  #tau
+  mu <- as.matrix(design.core) %*% (tau[2:length(tau)])
+  
+  finite.pop.opts <- list()
+  
+  # finite.pop initialization
+  #finite.pop.opts$dist <- rep("norm", 2^K)
+  #finite.pop.opts$avg  <- mu
+  #finite.pop.opts$std  <- rep(1, 2^K)
+  
+  finite.pop.opts$dist <- rep("exp", 2^K)
+  finite.pop.opts$mu  <- mu
+  finite.pop.opts$rate  <- rep(1, 2^K)
+  finite.pop.init <- list(
+    num_pop = num_pop,
+    num_trt_group = num_trt_group,
+    finite.pop.opts = finite.pop.opts
+  )
+  
+  # generate a finite population
+  pop_1 <- finite.pop(num_pop, num_trt_group, finite.pop.opts)
+  
+  # factorial.data opts
+  factorial.data.opts <- list()
+  
+  # factorial.data init
+  factorial.data.init <- list(
+    num_factors = K,
+    trt_group_size = trt_group_size,
+    pop = pop_1,
+    factorial.data.opts = factorial.data.opts,
+    finite.pop.init = list()
+  )
+  
+  factorial_data_raw <- factorial.data(K, trt_group_size, pop = pop_1,
+                                       factorial.data.opts, finite.pop.init)
+  
+  factorial_data <- factorial_data_raw$factorial_data
+  
+  #
+  alpha.vec <- rep(0.10/level, level)
+
+  simulation.res.strong = readRDS(paste0("simulation_large_effects_K_", K, ".rds"))
+  
+  model_report[[K_ind]] = check.model.selection(simulation.res.strong$model.select.res, nonzero.effect)
+  
+  # target_weight = design.core$F1/num_trt_group
+  mu_pop = factorial_data_raw$subgroup.effect
+  
+  target_weight = rep(0, num_trt_group)
+#  target_weight[1] = -1
+#  target_weight[2^K-1] = 1
+  target_weight[2^K] = 1
+  true_effect = sum(target_weight * mu_pop)
+  
+  coverage_report[[K_ind]] = check.target.coverage(simulation.res.strong, 
+                        design.core, 
+                        target_weight, true_effect)
+}
+```
+
+
+
+
+4. report results
+
+```{r}
+model_report_df = data.frame(
+  selection = c(sapply(1:length(K_choice), function(x){model_report[[x]][,1]})/Niter),
+  K = c(sapply(1:length(K_choice), function(x){rep(K_choice[x], 8)})),
+  Method = c(rep(c("FB", "WB", "Forward Bonferroni", "FL", "WL", 
+                   "Forward Lasso", "Naive Bonferroni", "Naive Lasso"), length(K_choice)))
+)
+
+
+rejection_report_df = data.frame(
+  Rejection = c(sapply(1:length(K_choice), function(x){coverage_report[[x]][,4]})),
+  K = c(sapply(1:length(K_choice), function(x){rep(K_choice[x], 9)})), 
+  Method = c(rep(c("FB", "WB", "Forward Bonferroni", "FL", "WL", "Forward Lasso", "Naive Bonferroni", "Naive Lasso", "No Selection"), length(K_choice)))
+)
+
+
+coverage_report_df = data.frame(
+  coverage = c(sapply(1:length(K_choice), function(x){coverage_report[[x]][,3]})),
+  K = c(sapply(1:length(K_choice), function(x){rep(K_choice[x], 9)})),
+  Method = c(rep(c("FB", "WB", "Forward Bonferroni", "FL", "WL", 
+                   "Forward Lasso", "Naive Bonferroni", "Naive Lasso", "No Selection"), length(K_choice)))
+)
+
+
+combined_report = merge(model_report_df, rejection_report_df,  by = c("K", "Method"))
+combined_report = merge(combined_report, coverage_report_df, by = c("K", "Method"))
+# View(combined_report)
+```
+
+
+```{r}
+
+
+target_weight = rep(0, num_trt_group)
+target_weight[1] = -1
+target_weight[2^K-1] = 1
+t(as.matrix(cbind(1, design.core))) %*% target_weight
+
+```
+
+
+
+
+```{r fig.height=2, fig.width=3}
+plot_selection = ggplot(combined_report %>% filter(!Method %in% c("FB", "FL", "WB", "WL")), 
+       aes(x=K, y=selection, col = Method, lty = Method, pch = Method)) +
+  geom_line(size = 1) + 
+  geom_point(size = 3) + 
+  geom_hline(yintercept = 1, lty = 2) +
+  labs(x = TeX("$K$"), y = "Perfect selection probability") + 
+  theme_classic(base_size = 20)
+
+plot_selection
+```
+
+
+
+
+
+```{r fig.height=2, fig.width=3}
+plot_rejection = ggplot(combined_report %>% filter(!Method %in% c("FB", "FL", "WB", "WL", "No Selection")), 
+       aes(x=K, y=Rejection, col = Method, lty = Method, pch = Method)) +
+  geom_line(size = 1) + 
+  geom_point(size = 3) + 
+  geom_hline(yintercept = 1, lty = 2) +
+  labs(x = TeX("$K$"), y = "Power") + 
+  theme_classic(base_size = 20)
+
+plot_rejection
+```
+
+
+
+```{r fig.height=2, fig.width=3}
+plot_coverage = ggplot(combined_report %>% filter(!Method %in% c("FB", "FL", "WB", "WL", "No Selection")), 
+       aes(x=K, y=coverage, col = Method, lty = Method, pch = Method)) +
+  geom_line(size = 1) + 
+  geom_point(size = 3) + 
+  geom_hline(yintercept = 0.95, lty = 2) +
+  scale_y_continuous(breaks = seq(0, 1.0, by = 0.1), limits = c(0.3, 1.1)) +
+  labs(x = TeX("$K$"), y = "Coverage probability") + 
+  theme_classic(base_size = 20)
+plot_coverage
+```
+
+
+```{r}
+ggsave("plot_selection.png", width = 8, height = 6, units = "in", plot_selection)
+ggsave("plot_rejection.png", width = 8, height = 6, units = "in", plot_rejection)
+ggsave("plot_coverage.png", width = 8, height = 6, units = "in", plot_coverage)
+plot_selection
+plot_rejection
+plot_coverage
+
+combined_plot = ggarrange(plot_selection, 
+          plot_rejection,
+          plot_coverage,
+         common.legend = TRUE, nrow = 1)
+combined_plot
+
+ggsave("combined_plot_N0.pdf", width = 15, height = 5, units = "in", combined_plot)
+```
+
+```{r}
+power_coverage_report = merge(rejection_report_df, coverage_report_df, by = c("N0", "Method"))
+# View(combined_report)
+```
+
+
+```{r}
+plot_rejection_no_selection = ggplot(power_coverage_report %>% filter(Method %in% c("Forward Bonferroni", "No Selection")), 
+       aes(x=N0, y=Rejection, col = Method, lty = Method, pch = Method)) +
+  geom_line(size = 1) + 
+  geom_point(size = 3) + 
+  geom_hline(yintercept = 1.0, lty = 2) +
+#  scale_y_continuous(breaks = seq(0, 1, by = 0.1), limits = c(0.3, 1)) +
+  labs(x = TeX("$N_0$"), y = "Power") + 
+  theme_classic(base_size = 20) #+
+#  scale_x_continuous(limits = c(0.26, 1.15))
+
+plot_rejection_no_selection
+```
+
+
+```{r}
+plot_coverage_no_selection = ggplot(power_coverage_report %>% filter(Method %in% c("Forward Bonferroni", "No Selection")), 
+       aes(x=N0, y=coverage, col = Method, lty = Method, pch = Method)) +
+  geom_line(size = 1) + 
+  geom_point(size = 3) + 
+  geom_hline(yintercept = 0.95, lty = 2) +
+  scale_y_continuous(breaks = seq(0, 1, by = 0.1), limits = c(0.5, 1)) +
+  labs(x = TeX("$N_0$"), y = "Coverage probability") + 
+  theme_classic(base_size = 20) #+
+#  scale_x_continuous(limits = c(0.26, 1.15))
+
+plot_coverage_no_selection
+```
+
+```{r} 
+ggsave("plot_rejection_test_N0.png", width = 8, height = 6, units = "in", plot_rejection_no_selection)
+ggsave("plot_coverage_test_N0.png", width = 8, height = 6, units = "in", plot_coverage_no_selection)
+
+combined_plot_test = ggarrange(plot_rejection_no_selection, 
+          plot_coverage_no_selection,
+         common.legend = TRUE, nrow = 1)
+combined_plot_test
+
+ggsave("combined_plot_test_N0.pdf", width = 10, height = 5, units = "in", combined_plot_test)
+```
+
+

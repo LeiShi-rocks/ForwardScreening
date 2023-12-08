@@ -224,8 +224,9 @@ for (N0_ind in 1:8){
   mu_pop = factorial_data_raw$subgroup.effect
   
   target_weight = rep(0, num_trt_group)
-  target_weight[1] = -1
-  target_weight[2^K-1] = 1
+#  target_weight[1] = -1
+#  target_weight[2^K-1] = 1
+  target_weight[2^K] = 1
   true_effect = sum(target_weight * mu_pop)
   
   coverage_report[[N0_ind]] = check.target.coverage(simulation.res.strong, 
@@ -300,6 +301,7 @@ plot_selection = ggplot(combined_report %>% filter(!Method %in% c("FB", "FL", "W
        aes(x=N0, y=selection, col = Method, lty = Method, pch = Method)) +
   geom_line(size = 1) + 
   geom_point(size = 3) + 
+  geom_hline(yintercept = 1, lty = 2) +
   labs(x = TeX("$N_0$"), y = "Perfect selection probability") + 
   theme_classic(base_size = 20)
 
@@ -315,6 +317,7 @@ plot_rejection = ggplot(combined_report %>% filter(!Method %in% c("FB", "FL", "W
        aes(x=N0, y=Rejection, col = Method, lty = Method, pch = Method)) +
   geom_line(size = 1) + 
   geom_point(size = 3) + 
+  geom_hline(yintercept = 1, lty = 2) +
   labs(x = TeX("$N_0$"), y = "Power") + 
   theme_classic(base_size = 20)
 
@@ -353,6 +356,51 @@ combined_plot
 ggsave("combined_plot_N0.pdf", width = 15, height = 5, units = "in", combined_plot)
 ```
 
+```{r}
+power_coverage_report = merge(rejection_report_df, coverage_report_df, by = c("N0", "Method"))
+# View(combined_report)
+```
 
+
+```{r}
+plot_rejection_no_selection = ggplot(power_coverage_report %>% filter(Method %in% c("Forward Bonferroni", "No Selection")), 
+       aes(x=N0, y=Rejection, col = Method, lty = Method, pch = Method)) +
+  geom_line(size = 1) + 
+  geom_point(size = 3) + 
+  geom_hline(yintercept = 1.0, lty = 2) +
+#  scale_y_continuous(breaks = seq(0, 1, by = 0.1), limits = c(0.3, 1)) +
+  labs(x = TeX("$N_0$"), y = "Power") + 
+  theme_classic(base_size = 20) #+
+#  scale_x_continuous(limits = c(0.26, 1.15))
+
+plot_rejection_no_selection
+```
+
+
+```{r}
+plot_coverage_no_selection = ggplot(power_coverage_report %>% filter(Method %in% c("Forward Bonferroni", "No Selection")), 
+       aes(x=N0, y=coverage, col = Method, lty = Method, pch = Method)) +
+  geom_line(size = 1) + 
+  geom_point(size = 3) + 
+  geom_hline(yintercept = 0.95, lty = 2) +
+  scale_y_continuous(breaks = seq(0, 1, by = 0.1), limits = c(0.5, 1)) +
+  labs(x = TeX("$N_0$"), y = "Coverage probability") + 
+  theme_classic(base_size = 20) #+
+#  scale_x_continuous(limits = c(0.26, 1.15))
+
+plot_coverage_no_selection
+```
+
+```{r} 
+ggsave("plot_rejection_test_N0.png", width = 8, height = 6, units = "in", plot_rejection_no_selection)
+ggsave("plot_coverage_test_N0.png", width = 8, height = 6, units = "in", plot_coverage_no_selection)
+
+combined_plot_test = ggarrange(plot_rejection_no_selection, 
+          plot_coverage_no_selection,
+         common.legend = TRUE, nrow = 1)
+combined_plot_test
+
+ggsave("combined_plot_test_N0.pdf", width = 10, height = 5, units = "in", combined_plot_test)
+```
 
 

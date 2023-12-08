@@ -1,0 +1,36 @@
+---
+title: "CandidateAnalysis"
+author: "Lei Shi"
+date: "2023-11-23"
+output: pdf_document
+---
+
+## Import Candidate Data
+
+```{r}
+library(haven)
+setwd('/Users/leishi/Documents/Research/ForwardScreening/CandidateExperiment')
+candidate <- read_dta("candidate.dta")
+# View(candidate)
+```
+
+
+## Collapse factor levels into binary
+```{r}
+candidate_new = candidate %>% mutate(
+  atmilitary = case_when(),
+  atreligion = case_when(),
+  ated = case_when(),
+  atprof = case_when(),
+  atinc = case_when(),
+  atrace = case_when(),
+  atage = case_when(),
+  
+)
+
+
+```
+
+
+
+
