@@ -17,7 +17,8 @@ if(!require("AlgDesign")){
 }
 library("car")
 library("glmnet")
-source("/Users/leishi/Documents/Research/ForwardScreening/auxillary_functions.R")
+# source("/Users/leishi/Documents/Research/ForwardScreening/auxillary_functions.R")
+source("../auxillary_functions.R")
 ```
 
 ```{r}
@@ -30,7 +31,6 @@ effect_size = 0.5
 
 1. Determine the factorial effect sizes.
 ```{r}
-
 for (K in K_choice){
   # basic parameter setup
   num_trt_group = 2^K
